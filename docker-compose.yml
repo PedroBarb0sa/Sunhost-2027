@@ -1,0 +1,11 @@
+services:
+  sunhost:
+    build: .
+    container_name: sunhost
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DEMO_MODE: "true"
+    ports:
+      - "3001:3001"

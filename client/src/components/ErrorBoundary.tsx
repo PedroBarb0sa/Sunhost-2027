@@ -1,6 +1,4 @@
-import { cn } from "@/lib/utils";
-import { AlertTriangle, RotateCcw } from "lucide-react";
-import { Component, ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -11,6 +9,7 @@ interface State {
   error: Error | null;
 }
 
+/** Mostra uma tela amigável se algum componente falhar, em vez de uma página em branco. */
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -21,40 +20,31 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  componentDidCatch(error: Error) {
+    console.error("[SunHost]", error);
+  }
+
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-          <div className="flex flex-col items-center w-full max-w-2xl p-8">
-            <AlertTriangle
-              size={48}
-              className="text-destructive mb-6 flex-shrink-0"
-            />
-
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
-
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
+        <div className="error-screen">
+          <div>
+            <span className="eyebrow">Algo saiu do roteiro</span>
+            <h1>Ops! Não foi possível mostrar esta página.</h1>
+            <p>Tente recarregar. Se o problema continuar, volte para o início.</p>
+            {this.state.error?.message && <pre>{this.state.error.message}</pre>}
+            <div className="form-actions">
+              <button className="btn btn-primary" onClick={() => window.location.reload()}>
+                Recarregar
+              </button>
+              <a className="btn btn-outline" href="/">
+                Ir para o início
+              </a>
             </div>
-
-            <button
-              onClick={() => window.location.reload()}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg",
-                "bg-primary text-primary-foreground",
-                "hover:opacity-90 cursor-pointer"
-              )}
-            >
-              <RotateCcw size={16} />
-              Reload Page
-            </button>
           </div>
         </div>
       );
     }
-
     return this.props.children;
   }
 }

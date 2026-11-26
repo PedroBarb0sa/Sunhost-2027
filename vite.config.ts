@@ -235,6 +235,10 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    // Encaminha as chamadas /api para o servidor Express (npm run dev sobe os dois).
+    proxy: {
+      "/api": { target: `http://localhost:${process.env.API_PORT || 3001}`, changeOrigin: true },
+    },
     strictPort: false, // Will find next available port if 3000 is busy
     host: true,
     allowedHosts: [

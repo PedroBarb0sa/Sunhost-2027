@@ -14,3 +14,7 @@ Execução local em modo demonstração, com PostgreSQL indisponível quando ind
 | CT-008 — Fallback local | APROVADO | `CT-008-fallback-terminal.txt` — log real: “PostgreSQL indisponível. SunHost iniciado em modo demonstração local.” |
 
 Os arquivos de imagem são capturas reais do navegador durante a execução; nenhum print foi criado artificialmente.
+
+## Versão final (redesign)
+
+Capturas reais do navegador na pasta `versao-final/` (PostgreSQL 16, desktop 1366 px e celular 390 px): início, explorar, anúncio, calendário de reserva, confirmação, minhas viagens, Pontos Cívicos, painel do anfitrião, novo anúncio, painel admin, usuários e login. O CT-006 (comentário e avaliação), antes não disponível, agora está implementado: avaliações de 1 a 5 estrelas com selo de hóspede verificado e resposta do anfitrião.
