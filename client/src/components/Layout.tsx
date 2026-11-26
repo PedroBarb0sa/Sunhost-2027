@@ -11,7 +11,11 @@ export const LOGO_SRC = "/assets/sunhost-symbol_64f5c7ec.png";
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link to="/" className={`logo${light ? " logo-light" : ""}`} aria-label="SunHost Floripa — início">
+    <Link
+      to="/"
+      className={`logo${light ? " logo-light" : ""}`}
+      aria-label="SunHost Floripa — início"
+    >
       <span className="logo-mark">
         <img src={LOGO_SRC} alt="" />
       </span>
@@ -30,8 +34,10 @@ function UserMenu() {
   useEffect(() => setOpen(false), [path]);
   useEffect(() => {
     if (!open) return undefined;
-    const onDown = (event: MouseEvent) => !ref.current?.contains(event.target as Node) && setOpen(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
+    const onDown = (event: MouseEvent) =>
+      !ref.current?.contains(event.target as Node) && setOpen(false);
+    const onKey = (event: KeyboardEvent) =>
+      event.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -42,10 +48,24 @@ function UserMenu() {
 
   return (
     <div className="user-menu" ref={ref}>
-      <button className={`user-trigger${open ? " is-open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" aria-label="Abrir menu da conta">
+      <button
+        className={`user-trigger${open ? " is-open" : ""}`}
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Abrir menu da conta"
+      >
         <Icon name="menu" size={18} />
-        {user ? <Avatar name={user.name} url={user.avatarUrl} size={30} /> : <span className="user-anon"><Icon name="user" size={18} /></span>}
-        {hostPending + unread.guest + unread.host > 0 && <span className="dot-badge" aria-label="Há novidades na sua conta" />}
+        {user ? (
+          <Avatar name={user.name} url={user.avatarUrl} size={30} />
+        ) : (
+          <span className="user-anon">
+            <Icon name="user" size={18} />
+          </span>
+        )}
+        {hostPending + unread.guest + unread.host > 0 && (
+          <span className="dot-badge" aria-label="Há novidades na sua conta" />
+        )}
       </button>
       {open && (
         <div className="menu-panel" role="menu">
@@ -59,23 +79,49 @@ function UserMenu() {
                 </div>
               </div>
               {user.role === "admin" && (
-                <Link to="/admin" className="menu-item menu-strong" role="menuitem">
+                <Link
+                  to="/admin"
+                  className="menu-item menu-strong"
+                  role="menuitem"
+                >
                   <Icon name="shield" size={18} /> Painel de administração
                 </Link>
               )}
               <Link to="/viagens" className="menu-item" role="menuitem">
-                <Icon name="compass" size={18} /> Minhas viagens {unread.guest > 0 && <span className="menu-count" title="Mensagens não lidas">{unread.guest}</span>}
+                <Icon name="compass" size={18} /> Minhas viagens{" "}
+                {unread.guest > 0 && (
+                  <span className="menu-count" title="Mensagens não lidas">
+                    {unread.guest}
+                  </span>
+                )}
               </Link>
               <Link to="/favoritos" className="menu-item" role="menuitem">
-                <Icon name="heart" size={18} /> Favoritos {favorites.length > 0 && <span className="menu-count">{favorites.length}</span>}
+                <Icon name="heart" size={18} /> Favoritos{" "}
+                {favorites.length > 0 && (
+                  <span className="menu-count">{favorites.length}</span>
+                )}
               </Link>
               <Link to="/pontos" className="menu-item" role="menuitem">
                 <Icon name="sparkles" size={18} /> Pontos Cívicos
               </Link>
               <hr />
-              {user.role !== "admin" && (
+              {user.role !== "admin" && user.isHost && (
                 <Link to="/anfitriao" className="menu-item" role="menuitem">
-                  <Icon name="home" size={18} /> Painel do anfitrião {hostPending + unread.host > 0 && <span className="menu-count">{hostPending + unread.host}</span>}
+                  <Icon name="home" size={18} /> Painel do anfitrião{" "}
+                  {hostPending + unread.host > 0 && (
+                    <span className="menu-count">
+                      {hostPending + unread.host}
+                    </span>
+                  )}
+                </Link>
+              )}
+              {user.role !== "admin" && !user.isHost && (
+                <Link
+                  to="/anfitriao/novo"
+                  className="menu-item"
+                  role="menuitem"
+                >
+                  <Icon name="home" size={18} /> Anuncie seu espaço
                 </Link>
               )}
               <Link to="/conta" className="menu-item" role="menuitem">
@@ -99,7 +145,11 @@ function UserMenu() {
             </>
           ) : (
             <>
-              <Link to="/entrar" className="menu-item menu-strong" role="menuitem">
+              <Link
+                to="/entrar"
+                className="menu-item menu-strong"
+                role="menuitem"
+              >
                 <Icon name="login" size={18} /> Entrar
               </Link>
               <Link to="/cadastro" className="menu-item" role="menuitem">
@@ -110,7 +160,10 @@ function UserMenu() {
                 <Icon name="home" size={18} /> Anuncie seu espaço
               </Link>
               <Link to="/favoritos" className="menu-item" role="menuitem">
-                <Icon name="heart" size={18} /> Favoritos {favorites.length > 0 && <span className="menu-count">{favorites.length}</span>}
+                <Icon name="heart" size={18} /> Favoritos{" "}
+                {favorites.length > 0 && (
+                  <span className="menu-count">{favorites.length}</span>
+                )}
               </Link>
               <Link to="/ajuda" className="menu-item" role="menuitem">
                 <Icon name="help" size={18} /> Central de ajuda
@@ -140,18 +193,27 @@ export function Header() {
       <div className="header-inner">
         <Logo light={transparent} />
         <nav className="header-nav" aria-label="Principal">
-          <Link to="/explorar" className={path.startsWith("/explorar") ? "active" : ""}>
+          <Link
+            to="/explorar"
+            className={path.startsWith("/explorar") ? "active" : ""}
+          >
             Explorar
           </Link>
           <Link to="/#pontos">Pontos Cívicos</Link>
-          <Link to="/ajuda" className={path.startsWith("/ajuda") ? "active" : ""}>
+          <Link
+            to="/ajuda"
+            className={path.startsWith("/ajuda") ? "active" : ""}
+          >
             Como funciona
           </Link>
         </nav>
         <div className="header-actions">
           {user?.role !== "admin" && (
-            <Link to={user ? "/anfitriao" : "/anfitriao/novo"} className="host-link">
-              {user ? "Modo anfitrião" : "Anuncie seu espaço"}
+            <Link
+              to={user?.isHost ? "/anfitriao" : "/anfitriao/novo"}
+              className="host-link"
+            >
+              {user?.isHost ? "Modo anfitrião" : "Anuncie seu espaço"}
             </Link>
           )}
           <UserMenu />
@@ -166,20 +228,74 @@ export function MobileNav() {
   const { path } = useLocation();
   const items = [
     { to: "/", label: "Início", icon: "home", active: path === "/" },
-    { to: "/explorar", label: "Explorar", icon: "search", active: path.startsWith("/explorar") || path.startsWith("/acomodacao") },
-    { to: "/favoritos", label: "Favoritos", icon: "heart", active: path === "/favoritos", badge: favorites.length },
+    {
+      to: "/explorar",
+      label: "Explorar",
+      icon: "search",
+      active: path.startsWith("/explorar") || path.startsWith("/acomodacao"),
+    },
+    {
+      to: "/favoritos",
+      label: "Favoritos",
+      icon: "heart",
+      active: path === "/favoritos",
+      badge: favorites.length,
+    },
     user?.role === "admin"
-      ? { to: "/admin", label: "Admin", icon: "shield", active: path.startsWith("/admin") }
-      : { to: user ? "/viagens" : "/entrar", label: user ? "Viagens" : "Entrar", icon: user ? "compass" : "login", active: path === "/viagens" || path === "/entrar", badge: user ? unread.guest : 0 },
-    { to: user ? (user.role === "admin" ? "/conta" : "/anfitriao") : "/cadastro", label: user ? (user.role === "admin" ? "Perfil" : "Anfitrião") : "Cadastro", icon: user ? (user.role === "admin" ? "user" : "building") : "user", active: path.startsWith("/anfitriao") || path === "/conta" || path === "/cadastro", badge: user?.role !== "admin" ? hostPending + unread.host : 0 },
+      ? {
+          to: "/admin",
+          label: "Admin",
+          icon: "shield",
+          active: path.startsWith("/admin"),
+        }
+      : {
+          to: user ? "/viagens" : "/entrar",
+          label: user ? "Viagens" : "Entrar",
+          icon: user ? "compass" : "login",
+          active: path === "/viagens" || path === "/entrar",
+          badge: user ? unread.guest : 0,
+        },
+    {
+      to: user
+        ? user.role === "admin"
+          ? "/conta"
+          : user.isHost
+            ? "/anfitriao"
+            : "/anfitriao/novo"
+        : "/cadastro",
+      label: user
+        ? user.role === "admin"
+          ? "Perfil"
+          : user.isHost
+            ? "Anfitrião"
+            : "Anunciar"
+        : "Cadastro",
+      icon: user ? (user.role === "admin" ? "user" : "building") : "user",
+      active:
+        path.startsWith("/anfitriao") ||
+        path === "/conta" ||
+        path === "/cadastro",
+      badge:
+        user?.role === "user" && user.isHost ? hostPending + unread.host : 0,
+    },
   ];
   return (
     <nav className="mobile-nav" aria-label="Navegação rápida">
       {items.map(item => (
-        <Link key={item.label} to={item.to} className={item.active ? "active" : ""}>
+        <Link
+          key={item.label}
+          to={item.to}
+          className={item.active ? "active" : ""}
+        >
           <span className="mobile-nav-icon">
-            <Icon name={item.icon} size={22} filled={item.icon === "heart" && item.active} />
-            {Boolean(item.badge) && <span className="mobile-badge">{item.badge}</span>}
+            <Icon
+              name={item.icon}
+              size={22}
+              filled={item.icon === "heart" && item.active}
+            />
+            {Boolean(item.badge) && (
+              <span className="mobile-badge">{item.badge}</span>
+            )}
           </span>
           <span>{item.label}</span>
         </Link>
@@ -194,7 +310,10 @@ export function Footer() {
       <div className="container footer-grid">
         <div className="footer-brand">
           <Logo light />
-          <p>Hospedagens locais para viver Florianópolis com mais contexto — e deixar boas marcas na ilha.</p>
+          <p>
+            Hospedagens locais para viver Florianópolis com mais contexto — e
+            deixar boas marcas na ilha.
+          </p>
           <div className="footer-tags">
             <span>Feito para Floripa</span>
             <span>Sem taxas de serviço</span>
@@ -221,7 +340,10 @@ export function Footer() {
         </div>
       </div>
       <div className="container footer-bottom">
-        <span>© {new Date().getFullYear()} SunHost Floripa · Projeto acadêmico de Análise e Desenvolvimento de Sistemas</span>
+        <span>
+          © {new Date().getFullYear()} SunHost Floripa · Projeto acadêmico de
+          Análise e Desenvolvimento de Sistemas
+        </span>
         <span>O pagamento é combinado diretamente com o anfitrião.</span>
       </div>
     </footer>

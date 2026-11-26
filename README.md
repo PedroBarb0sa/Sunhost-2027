@@ -15,6 +15,8 @@ Esta versão foi preparada para publicação no GitHub e validada localmente com
 
 O workflow [`ci.yml`](.github/workflows/ci.yml) repete automaticamente a checagem de tipos, os testes com cobertura e o build a cada pull request para `develop` ou push em branches de desenvolvimento.
 
+O painel de anfitrião só aparece para contas que já enviaram um primeiro anúncio. Hóspedes veem apenas a opção **Anuncie seu espaço**. O login fica isolado por aba do navegador, permitindo demonstrar hóspede e anfitrião simultaneamente sem que uma conta substitua a outra; mensagens também são alinhadas pelo remetente após recarregar a conversa.
+
 ## Versão final 2027 — o que há de novo
 
 Esta é a **versão final** do projeto. Em relação às versões anteriores, o pacote traz:
@@ -50,23 +52,23 @@ Abra **http://localhost:3000**. Sem PostgreSQL ligado, o servidor entra sozinho 
 
 Todas com a senha **`Floripa@2026`** (também há botões de preenchimento rápido na tela de login):
 
-| Perfil | E-mail | O que mostrar |
-|---|---|---|
-| Hóspede | `hospede@sunhost.local` | Já tem uma estadia concluída (pode avaliar com selo “hóspede verificado”) e 335 Pontos Cívicos |
-| Anfitriã | `anfitria@sunhost.local` | Dona das 6 acomodações; tem um pedido pendente e 1 mensagem não lida |
-| Admin | `admin@sunhost.local` | Painel de administração e moderação |
+| Perfil   | E-mail                   | O que mostrar                                                                                  |
+| -------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| Hóspede  | `hospede@sunhost.local`  | Já tem uma estadia concluída (pode avaliar com selo “hóspede verificado”) e 335 Pontos Cívicos |
+| Anfitriã | `anfitria@sunhost.local` | Dona das 6 acomodações; tem um pedido pendente e 1 mensagem não lida                           |
+| Admin    | `admin@sunhost.local`    | Painel de administração e moderação                                                            |
 
 > **Dica para a apresentação:** abra o site em duas janelas (uma anônima), entre como hóspede numa e como anfitriã na outra, e troque mensagens: elas aparecem na hora dos dois lados.
 
 ### Problemas comuns
 
-| Sintoma | Solução |
-|---|---|
-| `Versão do Node.js incompatível` ou erro do Vite sobre a versão do Node | Instale o Node.js LTS (20.19+ ou 22.12+) em https://nodejs.org, abra um terminal novo e rode `npm install` de novo |
-| `As dependências ainda não foram instaladas` | Rode `npm install` antes de `npm run dev` |
-| Página não abre sozinha | Abra manualmente http://localhost:3000 (o terminal mostra o endereço; se a porta 3000 estiver ocupada, o Vite usa a próxima) |
-| Erro de porta em uso na API (3001) | Feche o outro programa que usa a porta ou rode com `PORT=3002` e `API_PORT=3002` |
-| Erro no `npm install` | Apague a pasta `node_modules` e rode `npm install` de novo |
+| Sintoma                                                                 | Solução                                                                                                                      |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `Versão do Node.js incompatível` ou erro do Vite sobre a versão do Node | Instale o Node.js LTS (20.19+ ou 22.12+) em https://nodejs.org, abra um terminal novo e rode `npm install` de novo           |
+| `As dependências ainda não foram instaladas`                            | Rode `npm install` antes de `npm run dev`                                                                                    |
+| Página não abre sozinha                                                 | Abra manualmente http://localhost:3000 (o terminal mostra o endereço; se a porta 3000 estiver ocupada, o Vite usa a próxima) |
+| Erro de porta em uso na API (3001)                                      | Feche o outro programa que usa a porta ou rode com `PORT=3002` e `API_PORT=3002`                                             |
+| Erro no `npm install`                                                   | Apague a pasta `node_modules` e rode `npm install` de novo                                                                   |
 
 ## Com PostgreSQL
 
@@ -80,25 +82,26 @@ O servidor aplica `schema.sql` a cada inicialização (as instruções são idem
 
 ### Modelo de dados
 
-| Tabela | Conteúdo |
-|---|---|
-| `users` | Contas (papel `user`/`admin`, status ativo/bloqueado, telefone, bio, foto, pontos de boas-vindas) |
-| `sessions` | Sessões de login (só o hash SHA-256 do token; expiram em 30 dias) |
-| `accommodations` | Anúncios: tipo, preço, taxa de limpeza, capacidade, comodidades, regras, horários, status de moderação, destaque |
-| `accommodation_photos` | Fotos ordenadas de cada anúncio |
-| `uploads` | Imagens enviadas do dispositivo (fotos e avatares) |
-| `reservations` | Solicitações e reservas (pendente → confirmada/recusada/cancelada), valores e cupom aplicado |
-| `messages` | Conversa entre hóspede e anfitrião dentro de cada reserva (em tempo real) |
-| `reviews` | Avaliações de 1 a 5 estrelas (uma por pessoa por anúncio), resposta do anfitrião, ocultação pela moderação |
-| `favorites` | Favoritos por conta |
-| `redemptions` | Cupons resgatados com Pontos Cívicos |
-| `reports` | Denúncias de anúncios |
+| Tabela                 | Conteúdo                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `users`                | Contas (papel `user`/`admin`, status ativo/bloqueado, telefone, bio, foto, pontos de boas-vindas)                |
+| `sessions`             | Sessões de login (só o hash SHA-256 do token; expiram em 30 dias)                                                |
+| `accommodations`       | Anúncios: tipo, preço, taxa de limpeza, capacidade, comodidades, regras, horários, status de moderação, destaque |
+| `accommodation_photos` | Fotos ordenadas de cada anúncio                                                                                  |
+| `uploads`              | Imagens enviadas do dispositivo (fotos e avatares)                                                               |
+| `reservations`         | Solicitações e reservas (pendente → confirmada/recusada/cancelada), valores e cupom aplicado                     |
+| `messages`             | Conversa entre hóspede e anfitrião dentro de cada reserva (em tempo real)                                        |
+| `reviews`              | Avaliações de 1 a 5 estrelas (uma por pessoa por anúncio), resposta do anfitrião, ocultação pela moderação       |
+| `favorites`            | Favoritos por conta                                                                                              |
+| `redemptions`          | Cupons resgatados com Pontos Cívicos                                                                             |
+| `reports`              | Denúncias de anúncios                                                                                            |
 
 Todas as relações têm chave estrangeira com `ON DELETE CASCADE`/`SET NULL`, `CHECK` de status e índices.
 
 ## Funcionalidades
 
 **Viajante**
+
 - Busca por bairro/texto, datas (calendário que esconde espaços ocupados), hóspedes, tipo de espaço, faixa de preço, comodidades e ordenação. Filtros ficam na URL (link compartilhável).
 - Página do anúncio com galeria em tela cheia, comodidades, regras, disponibilidade, anfitrião, avaliações (média, distribuição por estrelas, selo de hóspede verificado) e denúncia.
 - Solicitação de reserva com cálculo de noites, taxa de limpeza, cupom e total; cancelamento; contato por WhatsApp/e-mail liberado após a confirmação.
@@ -108,10 +111,12 @@ Todas as relações têm chave estrangeira com `ON DELETE CASCADE`/`SET NULL`, `
 - Perfil com foto, telefone e bio; troca de senha; exclusão da conta (LGPD).
 
 **Anfitrião**
+
 - Anúncio com até 12 fotos enviadas do celular/computador (redimensionadas no navegador) ou por link, reordenação e capa.
 - Painel com pedidos pendentes, próximas estadias, valor a receber, nota média; aceitar/recusar (pedidos sobrepostos são recusados automaticamente), pausar/reativar, editar (volta para revisão) e excluir anúncios; responder avaliações.
 
 **Administração**
+
 - Visão geral com indicadores; moderação de anúncios (aprovar, recusar com observação, pausar, destacar na home, excluir, remover fotos); usuários (bloquear/desbloquear); reservas (ver conversa, cancelar); avaliações (ocultar/publicar/excluir); denúncias (resolver).
 
 **Como funciona o tempo real**: cada navegador logado abre uma conexão **Server-Sent Events** em `/api/events` (recurso nativo do navegador e do Node, sem biblioteca extra). Quando alguém envia uma mensagem ou muda o status de uma reserva, o servidor empurra o evento para os navegadores dos envolvidos. Se a conexão cair, o navegador reconecta sozinho em 3 segundos e a conversa aberta também consulta o servidor a cada 20 segundos como garantia. O indicador “Ao vivo” na conversa mostra o estado da conexão. As leituras ficam em `reservations.guest_read_at`/`host_read_at`.
@@ -120,13 +125,13 @@ Todas as relações têm chave estrangeira com `ON DELETE CASCADE`/`SET NULL`, `
 
 ## Scripts
 
-| Comando | Uso |
-|---|---|
-| `npm run dev` | Vite (3000) + API (3001); o Vite encaminha `/api` para a API |
-| `npm run dev:api` | Só a API |
-| `npm run check` | Checagem de tipos (TypeScript) |
-| `npm test` / `npm run test:coverage` | Testes Vitest |
-| `npm run build` e `npm start` | Build de produção (frontend + API no mesmo processo, porta `PORT`; funciona também no Windows) |
+| Comando                              | Uso                                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `npm run dev`                        | Vite (3000) + API (3001); o Vite encaminha `/api` para a API                                   |
+| `npm run dev:api`                    | Só a API                                                                                       |
+| `npm run check`                      | Checagem de tipos (TypeScript)                                                                 |
+| `npm test` / `npm run test:coverage` | Testes Vitest                                                                                  |
+| `npm run build` e `npm start`        | Build de produção (frontend + API no mesmo processo, porta `PORT`; funciona também no Windows) |
 
 ## Estrutura
 

@@ -2,10 +2,26 @@
  * Painel do anfitrião e formulário de anúncio.
  */
 import { type FormEvent, useEffect, useState } from "react";
-import { AMENITIES, CATEGORIES, DISTRICTS, pointsForPrice } from "@shared/catalog";
+import {
+  AMENITIES,
+  CATEGORIES,
+  DISTRICTS,
+  pointsForPrice,
+} from "@shared/catalog";
 import { AMENITY_ICONS, CATEGORY_ICONS, Icon } from "@/components/Icon";
 import { ReservationCard } from "@/components/Reservations";
-import { EmptyState, PageHeader, RatingBadge, Spinner, Stars, StatusPill, Stepper, Tabs, confirmDialog, useDocumentTitle } from "@/components/ui";
+import {
+  EmptyState,
+  PageHeader,
+  RatingBadge,
+  Spinner,
+  Stars,
+  StatusPill,
+  Stepper,
+  Tabs,
+  confirmDialog,
+  useDocumentTitle,
+} from "@/components/ui";
 import { useApp, useRealtime } from "@/context/AppContext";
 import { api, errorMessage } from "@/lib/api";
 import { brl, longDate, plural, todayISO } from "@/lib/format";
@@ -19,63 +35,146 @@ export function HostDashboard() {
   useDocumentTitle("Painel do anfitrião");
   const { user, toast, refreshHostPending } = useApp();
   const [tab, setTab] = useState<HostTab>("reservations");
-  const [filter, setFilter] = useState<"pending" | "confirmed" | "history">("pending");
+  const [filter, setFilter] = useState<"pending" | "confirmed" | "history">(
+    "pending"
+  );
   const [listings, setListings] = useState<HostListing[] | null>(null);
   const [reservations, setReservations] = useState<Reservation[] | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
 
   const load = () => {
-    api<HostListing[]>("/api/host/listings").then(setListings).catch(err => toast(errorMessage(err), "error"));
-    api<Reservation[]>("/api/host/reservations").then(setReservations).catch(() => setReservations([]));
-    api<Review[]>("/api/host/reviews").then(setReviews).catch(() => undefined);
+    api<HostListing[]>("/api/host/listings")
+      .then(setListings)
+      .catch(err => toast(errorMessage(err), "error"));
+    api<Reservation[]>("/api/host/reservations")
+      .then(setReservations)
+      .catch(() => setReservations([]));
+    api<Review[]>("/api/host/reviews")
+      .then(setReviews)
+      .catch(() => undefined);
     refreshHostPending();
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(load, []);
+  useEffect(() => {
+    if (user?.isHost) load();
+    // A conta só passa a ser anfitriã depois do primeiro anúncio.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.isHost]);
   // Novos pedidos, cancelamentos e mensagens aparecem sem recarregar a página.
   useRealtime("reservation", () => {
-    api<Reservation[]>("/api/host/reservations").then(setReservations).catch(() => undefined);
-    api<HostListing[]>("/api/host/listings").then(setListings).catch(() => undefined);
+    api<Reservation[]>("/api/host/reservations")
+      .then(setReservations)
+      .catch(() => undefined);
+    api<HostListing[]>("/api/host/listings")
+      .then(setListings)
+      .catch(() => undefined);
   });
   useRealtime("message", () => {
-    api<Reservation[]>("/api/host/reservations").then(setReservations).catch(() => undefined);
+    api<Reservation[]>("/api/host/reservations")
+      .then(setReservations)
+      .catch(() => undefined);
   });
 
   if (user?.role === "admin")
     return (
       <div className="page container">
-        <EmptyState icon="shield" title="Conta de administração" text="Administradores moderam a plataforma. Para anunciar, use uma conta comum." action={<Link to="/admin" className="btn btn-primary">Ir para o painel admin</Link>} />
+        <EmptyState
+          icon="shield"
+          title="Conta de administração"
+          text="Administradores moderam a plataforma. Para anunciar, use uma conta comum."
+          action={
+            <Link to="/admin" className="btn btn-primary">
+              Ir para o painel admin
+            </Link>
+          }
+        />
+      </div>
+    );
+  if (!user?.isHost)
+    return (
+      <div className="page container">
+        <EmptyState
+          icon="home"
+          title="Cadastre-se como anfitrião"
+          text="O painel de anúncios aparece depois que você enviar seu primeiro espaço para revisão."
+          action={
+            <Link to="/anfitriao/novo" className="btn btn-primary">
+              Anunciar meu espaço
+            </Link>
+          }
+        />
       </div>
     );
   if (!listings || !reservations) return <Spinner />;
 
   const today = todayISO();
   const pending = reservations.filter(row => row.status === "pending");
-  const confirmed = reservations.filter(row => row.status === "confirmed" && row.checkOut > today).sort((a, b) => (a.checkIn > b.checkIn ? 1 : -1));
-  const history = reservations.filter(row => !pending.includes(row) && !confirmed.includes(row));
+  const confirmed = reservations
+    .filter(row => row.status === "confirmed" && row.checkOut > today)
+    .sort((a, b) => (a.checkIn > b.checkIn ? 1 : -1));
+  const history = reservations.filter(
+    row => !pending.includes(row) && !confirmed.includes(row)
+  );
   const revenue = confirmed.reduce((sum, row) => sum + row.total, 0);
   const rated = listings.filter(item => item.rating !== null);
-  const average = rated.length ? rated.reduce((sum, item) => sum + (item.rating || 0) * item.reviewCount, 0) / rated.reduce((sum, item) => sum + item.reviewCount, 0) : null;
-  const shown = filter === "pending" ? pending : filter === "confirmed" ? confirmed : history;
+  const average = rated.length
+    ? rated.reduce(
+        (sum, item) => sum + (item.rating || 0) * item.reviewCount,
+        0
+      ) / rated.reduce((sum, item) => sum + item.reviewCount, 0)
+    : null;
+  const shown =
+    filter === "pending"
+      ? pending
+      : filter === "confirmed"
+        ? confirmed
+        : history;
   const updateReservation = (next: Reservation) => {
-    setReservations(current => (current || []).map(row => (row.id === next.id ? next : row)));
+    setReservations(current =>
+      (current || []).map(row => (row.id === next.id ? next : row))
+    );
     if (next.status === "confirmed") load();
   };
 
-  const setStatus = async (listing: HostListing, status: "paused" | "approved") => {
+  const setStatus = async (
+    listing: HostListing,
+    status: "paused" | "approved"
+  ) => {
     try {
-      const next = await api<Listing>(`/api/host/listings/${listing.id}/status`, { method: "PATCH", body: { status } });
-      setListings(current => (current || []).map(item => (item.id === listing.id ? { ...item, ...next } : item)));
-      toast(status === "paused" ? "Anúncio pausado: ele não aparece nas buscas." : "Anúncio reativado.", "info");
+      const next = await api<Listing>(
+        `/api/host/listings/${listing.id}/status`,
+        { method: "PATCH", body: { status } }
+      );
+      setListings(current =>
+        (current || []).map(item =>
+          item.id === listing.id ? { ...item, ...next } : item
+        )
+      );
+      toast(
+        status === "paused"
+          ? "Anúncio pausado: ele não aparece nas buscas."
+          : "Anúncio reativado.",
+        "info"
+      );
     } catch (err) {
       toast(errorMessage(err), "error");
     }
   };
   const remove = async (listing: HostListing) => {
-    if (!(await confirmDialog({ title: `Excluir “${listing.title}”?`, message: "Fotos, avaliações e histórico de reservas deste espaço também serão removidos.", confirmLabel: "Excluir anúncio", danger: true }))) return;
+    if (
+      !(await confirmDialog({
+        title: `Excluir “${listing.title}”?`,
+        message:
+          "Fotos, avaliações e histórico de reservas deste espaço também serão removidos.",
+        confirmLabel: "Excluir anúncio",
+        danger: true,
+      }))
+    )
+      return;
     try {
       await api(`/api/host/listings/${listing.id}`, { method: "DELETE" });
-      setListings(current => (current || []).filter(item => item.id !== listing.id));
+      setListings(current =>
+        (current || []).filter(item => item.id !== listing.id)
+      );
       toast("Anúncio excluído.", "info");
     } catch (err) {
       toast(errorMessage(err), "error");
@@ -95,12 +194,26 @@ export function HostDashboard() {
         }
       />
       <div className="stat-grid">
-        <button className={`stat-card${pending.length ? " stat-alert" : ""}`} onClick={() => { setTab("reservations"); setFilter("pending"); }}>
+        <button
+          className={`stat-card${pending.length ? " stat-alert" : ""}`}
+          onClick={() => {
+            setTab("reservations");
+            setFilter("pending");
+          }}
+        >
           <Icon name="bell" size={22} />
           <strong>{pending.length}</strong>
-          <span>{pending.length === 1 ? "pedido pendente" : "pedidos pendentes"}</span>
+          <span>
+            {pending.length === 1 ? "pedido pendente" : "pedidos pendentes"}
+          </span>
         </button>
-        <button className="stat-card" onClick={() => { setTab("reservations"); setFilter("confirmed"); }}>
+        <button
+          className="stat-card"
+          onClick={() => {
+            setTab("reservations");
+            setFilter("confirmed");
+          }}
+        >
           <Icon name="calendar" size={22} />
           <strong>{confirmed.length}</strong>
           <span>próximas estadias</span>
@@ -113,13 +226,16 @@ export function HostDashboard() {
         <button className="stat-card" onClick={() => setTab("listings")}>
           <Icon name="home" size={22} />
           <strong>
-            {listings.filter(item => item.status === "approved").length}/{listings.length}
+            {listings.filter(item => item.status === "approved").length}/
+            {listings.length}
           </strong>
           <span>anúncios publicados</span>
         </button>
         <button className="stat-card" onClick={() => setTab("reviews")}>
           <Icon name="star" size={22} />
-          <strong>{average ? average.toFixed(1).replace(".", ",") : "—"}</strong>
+          <strong>
+            {average ? average.toFixed(1).replace(".", ",") : "—"}
+          </strong>
           <span>nota média ({reviews.length})</span>
         </button>
       </div>
@@ -144,7 +260,11 @@ export function HostDashboard() {
                 ["history", `Histórico (${history.length})`],
               ] as const
             ).map(([value, label]) => (
-              <button key={value} className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>
+              <button
+                key={value}
+                className={filter === value ? "active" : ""}
+                onClick={() => setFilter(value)}
+              >
                 {label}
               </button>
             ))}
@@ -152,11 +272,29 @@ export function HostDashboard() {
           {shown.length ? (
             <div className="reservation-list">
               {shown.map(row => (
-                <ReservationCard key={row.id} reservation={row} onChanged={updateReservation} />
+                <ReservationCard
+                  key={row.id}
+                  reservation={row}
+                  onChanged={updateReservation}
+                />
               ))}
             </div>
           ) : (
-            <EmptyState icon="calendar" title={filter === "pending" ? "Nenhum pedido aguardando" : filter === "confirmed" ? "Nenhuma estadia confirmada à frente" : "Sem histórico ainda"} text={listings.length ? "Quando um viajante solicitar uma reserva, ela aparece aqui." : "Publique seu primeiro espaço para começar a receber pedidos."} />
+            <EmptyState
+              icon="calendar"
+              title={
+                filter === "pending"
+                  ? "Nenhum pedido aguardando"
+                  : filter === "confirmed"
+                    ? "Nenhuma estadia confirmada à frente"
+                    : "Sem histórico ainda"
+              }
+              text={
+                listings.length
+                  ? "Quando um viajante solicitar uma reserva, ela aparece aqui."
+                  : "Publique seu primeiro espaço para começar a receber pedidos."
+              }
+            />
           )}
         </>
       )}
@@ -166,41 +304,86 @@ export function HostDashboard() {
           <div className="host-listings">
             {listings.map(listing => (
               <article className="host-listing" key={listing.id}>
-                <Link to={`/acomodacao/${listing.id}`} className="host-listing-thumb">
-                  {listing.images[0] ? <img src={listing.images[0]} alt="" /> : <Icon name="image" size={28} />}
+                <Link
+                  to={`/acomodacao/${listing.id}`}
+                  className="host-listing-thumb"
+                >
+                  {listing.images[0] ? (
+                    <img src={listing.images[0]} alt="" />
+                  ) : (
+                    <Icon name="image" size={28} />
+                  )}
                 </Link>
                 <div className="host-listing-body">
                   <div className="reservation-top">
-                    <StatusPill status={listing.status} label={listing.status === "pending" ? "Em análise" : undefined} />
-                    {listing.featured && <span className="pill pill-orange">Destaque</span>}
-                    <RatingBadge rating={listing.rating} count={listing.reviewCount} />
+                    <StatusPill
+                      status={listing.status}
+                      label={
+                        listing.status === "pending" ? "Em análise" : undefined
+                      }
+                    />
+                    {listing.featured && (
+                      <span className="pill pill-orange">Destaque</span>
+                    )}
+                    <RatingBadge
+                      rating={listing.rating}
+                      count={listing.reviewCount}
+                    />
                   </div>
                   <h3>
-                    <Link to={`/acomodacao/${listing.id}`}>{listing.title}</Link>
+                    <Link to={`/acomodacao/${listing.id}`}>
+                      {listing.title}
+                    </Link>
                   </h3>
                   <p className="muted small">
-                    {listing.district} · {brl(listing.price)}/noite · {plural(listing.guests, "hóspede", "hóspedes")} · {plural(listing.images.length, "foto", "fotos")}
+                    {listing.district} · {brl(listing.price)}/noite ·{" "}
+                    {plural(listing.guests, "hóspede", "hóspedes")} ·{" "}
+                    {plural(listing.images.length, "foto", "fotos")}
                   </p>
-                  {listing.moderationNote && listing.status !== "approved" && <p className="moderation-note">{listing.moderationNote}</p>}
+                  {listing.moderationNote && listing.status !== "approved" && (
+                    <p className="moderation-note">{listing.moderationNote}</p>
+                  )}
                   <p className="muted small">
-                    {plural(listing.pendingRequests, "pedido pendente", "pedidos pendentes")} · {plural(listing.upcomingStays, "estadia futura", "estadias futuras")}
+                    {plural(
+                      listing.pendingRequests,
+                      "pedido pendente",
+                      "pedidos pendentes"
+                    )}{" "}
+                    ·{" "}
+                    {plural(
+                      listing.upcomingStays,
+                      "estadia futura",
+                      "estadias futuras"
+                    )}
                   </p>
                 </div>
                 <div className="host-listing-actions">
-                  <Link to={`/anfitriao/editar/${listing.id}`} className="btn btn-sm btn-outline">
+                  <Link
+                    to={`/anfitriao/editar/${listing.id}`}
+                    className="btn btn-sm btn-outline"
+                  >
                     <Icon name="edit" size={16} /> Editar
                   </Link>
                   {listing.status === "approved" && (
-                    <button className="btn btn-sm btn-ghost" onClick={() => setStatus(listing, "paused")}>
+                    <button
+                      className="btn btn-sm btn-ghost"
+                      onClick={() => setStatus(listing, "paused")}
+                    >
                       <Icon name="pause" size={16} /> Pausar
                     </button>
                   )}
                   {listing.status === "paused" && (
-                    <button className="btn btn-sm btn-ghost" onClick={() => setStatus(listing, "approved")}>
+                    <button
+                      className="btn btn-sm btn-ghost"
+                      onClick={() => setStatus(listing, "approved")}
+                    >
                       <Icon name="play" size={16} /> Reativar
                     </button>
                   )}
-                  <button className="btn btn-sm btn-ghost danger" onClick={() => remove(listing)}>
+                  <button
+                    className="btn btn-sm btn-ghost danger"
+                    onClick={() => remove(listing)}
+                  >
                     <Icon name="trash" size={16} /> Excluir
                   </button>
                 </div>
@@ -208,7 +391,16 @@ export function HostDashboard() {
             ))}
           </div>
         ) : (
-          <EmptyState icon="home" title="Você ainda não tem anúncios" text="Cadastre seu espaço em poucos minutos. A equipe revisa e publica." action={<Link to="/anfitriao/novo" className="btn btn-primary">Criar primeiro anúncio</Link>} />
+          <EmptyState
+            icon="home"
+            title="Você ainda não tem anúncios"
+            text="Cadastre seu espaço em poucos minutos. A equipe revisa e publica."
+            action={
+              <Link to="/anfitriao/novo" className="btn btn-primary">
+                Criar primeiro anúncio
+              </Link>
+            }
+          />
         ))}
 
       {tab === "reviews" &&
@@ -232,7 +424,10 @@ export function HostDashboard() {
                     <p>{review.hostReply}</p>
                   </div>
                 ) : (
-                  <Link to={`/acomodacao/${review.listingId}#avaliacoes`} className="link-btn">
+                  <Link
+                    to={`/acomodacao/${review.listingId}#avaliacoes`}
+                    className="link-btn"
+                  >
                     <Icon name="message" size={15} /> Responder no anúncio
                   </Link>
                 )}
@@ -240,7 +435,11 @@ export function HostDashboard() {
             ))}
           </div>
         ) : (
-          <EmptyState icon="star" title="Nenhuma avaliação ainda" text="As avaliações dos hóspedes aparecem aqui para você acompanhar e responder." />
+          <EmptyState
+            icon="star"
+            title="Nenhuma avaliação ainda"
+            text="As avaliações dos hóspedes aparecem aqui para você acompanhar e responder."
+          />
         ))}
     </div>
   );
@@ -291,7 +490,7 @@ const EMPTY: FormState = {
 
 export function HostListingForm({ id }: { id?: string }) {
   useDocumentTitle(id ? "Editar anúncio" : "Novo anúncio");
-  const { user, toast } = useApp();
+  const { user, setUser, toast } = useApp();
   const [form, setForm] = useState<FormState | null>(id ? null : EMPTY);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
@@ -332,12 +531,22 @@ export function HostListingForm({ id }: { id?: string }) {
   if (user?.role === "admin" && !id)
     return (
       <div className="page container">
-        <EmptyState icon="shield" title="Use uma conta comum para anunciar" text="Administradores moderam os anúncios, mas não publicam espaços próprios." action={<Link to="/admin" className="btn btn-primary">Ir para o painel admin</Link>} />
+        <EmptyState
+          icon="shield"
+          title="Use uma conta comum para anunciar"
+          text="Administradores moderam os anúncios, mas não publicam espaços próprios."
+          action={
+            <Link to="/admin" className="btn btn-primary">
+              Ir para o painel admin
+            </Link>
+          }
+        />
       </div>
     );
   if (!form) return <Spinner />;
 
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm(current => (current ? { ...current, [key]: value } : current));
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm(current => (current ? { ...current, [key]: value } : current));
   const price = Number(form.price) || 0;
 
   const addFiles = async (files: FileList | null) => {
@@ -348,7 +557,9 @@ export function HostListingForm({ id }: { id?: string }) {
     for (const file of list) {
       try {
         const url = await uploadImage(file);
-        setForm(current => (current ? { ...current, photos: [...current.photos, url] } : current));
+        setForm(current =>
+          current ? { ...current, photos: [...current.photos, url] } : current
+        );
       } catch (err) {
         toast(errorMessage(err), "error");
       } finally {
@@ -358,7 +569,8 @@ export function HostListingForm({ id }: { id?: string }) {
   };
   const addLink = () => {
     const url = linkUrl.trim();
-    if (!/^https?:\/\/\S+$/.test(url)) return toast("Cole um link de imagem começando com https://", "error");
+    if (!/^https?:\/\/\S+$/.test(url))
+      return toast("Cole um link de imagem começando com https://", "error");
     set("photos", [...form.photos, url].slice(0, 12));
     setLinkUrl("");
   };
@@ -373,13 +585,25 @@ export function HostListingForm({ id }: { id?: string }) {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.category) return toast("Escolha o tipo de espaço.", "error");
-    if (!form.photos.length) return toast("Adicione pelo menos uma foto.", "error");
+    if (!form.photos.length)
+      return toast("Adicione pelo menos uma foto.", "error");
     setSaving(true);
     try {
-      const body = { ...form, price: Number(form.price), cleaningFee: Number(form.cleaningFee || 0) };
+      const body = {
+        ...form,
+        price: Number(form.price),
+        cleaningFee: Number(form.cleaningFee || 0),
+      };
       if (id) await api(`/api/host/listings/${id}`, { method: "PUT", body });
-      else await api("/api/host/listings", { method: "POST", body });
-      toast(id ? "Alterações enviadas para revisão." : "Anúncio enviado! A equipe vai revisar e publicar.");
+      else {
+        await api("/api/host/listings", { method: "POST", body });
+        if (user) setUser({ ...user, isHost: true });
+      }
+      toast(
+        id
+          ? "Alterações enviadas para revisão."
+          : "Anúncio enviado! A equipe vai revisar e publicar."
+      );
       navigate("/anfitriao");
     } catch (err) {
       toast(errorMessage(err), "error");
@@ -392,8 +616,14 @@ export function HostListingForm({ id }: { id?: string }) {
     <div className="page container narrow">
       <PageHeader
         eyebrow={id ? "Editar anúncio" : "Novo anúncio"}
-        title={id ? form.title || "Editar anúncio" : "Conte a história do seu canto"}
-        text={id && status === "approved" ? "Ao salvar, o anúncio passa por uma nova revisão rápida antes de voltar às buscas." : "Anunciar é gratuito. Depois do envio, a equipe SunHost revisa as informações e publica."}
+        title={
+          id ? form.title || "Editar anúncio" : "Conte a história do seu canto"
+        }
+        text={
+          id && status === "approved"
+            ? "Ao salvar, o anúncio passa por uma nova revisão rápida antes de voltar às buscas."
+            : "Anunciar é gratuito. Depois do envio, a equipe SunHost revisa as informações e publica."
+        }
       />
       <form className="listing-form" onSubmit={submit}>
         <section className="panel">
@@ -402,8 +632,17 @@ export function HostListingForm({ id }: { id?: string }) {
           </h2>
           <div className="category-picker">
             {CATEGORIES.map(category => (
-              <label key={category} className={`category-option${form.category === category ? " checked" : ""}`}>
-                <input type="radio" name="category" value={category} checked={form.category === category} onChange={() => set("category", category)} />
+              <label
+                key={category}
+                className={`category-option${form.category === category ? " checked" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="category"
+                  value={category}
+                  checked={form.category === category}
+                  onChange={() => set("category", category)}
+                />
                 <Icon name={CATEGORY_ICONS[category] || "home"} size={26} />
                 <span>{category}</span>
               </label>
@@ -417,13 +656,28 @@ export function HostListingForm({ id }: { id?: string }) {
           </h2>
           <label className="field">
             <span className="field-label">Título do anúncio</span>
-            <input value={form.title} onChange={event => set("title", event.target.value)} required minLength={6} maxLength={80} placeholder="Ex.: Casa com deck e vista para a Lagoa" />
+            <input
+              value={form.title}
+              onChange={event => set("title", event.target.value)}
+              required
+              minLength={6}
+              maxLength={80}
+              placeholder="Ex.: Casa com deck e vista para a Lagoa"
+            />
             <small className="field-hint">{form.title.length}/80</small>
           </label>
           <div className="form-grid">
             <label className="field">
               <span className="field-label">Bairro</span>
-              <input value={form.district} onChange={event => set("district", event.target.value)} list="host-districts" required minLength={2} maxLength={60} placeholder="Ex.: Campeche" />
+              <input
+                value={form.district}
+                onChange={event => set("district", event.target.value)}
+                list="host-districts"
+                required
+                minLength={2}
+                maxLength={60}
+                placeholder="Ex.: Campeche"
+              />
               <datalist id="host-districts">
                 {DISTRICTS.map(district => (
                   <option key={district} value={district} />
@@ -434,7 +688,12 @@ export function HostListingForm({ id }: { id?: string }) {
               <span className="field-label">
                 Destaque local <em>opcional</em>
               </span>
-              <input value={form.localNote} onChange={event => set("localNote", event.target.value)} maxLength={40} placeholder="Ex.: Praia a 5 min a pé" />
+              <input
+                value={form.localNote}
+                onChange={event => set("localNote", event.target.value)}
+                maxLength={40}
+                placeholder="Ex.: Praia a 5 min a pé"
+              />
             </label>
           </div>
         </section>
@@ -454,7 +713,13 @@ export function HostListingForm({ id }: { id?: string }) {
             ).map(([key, label, min, max]) => (
               <div className="capacity-row" key={key}>
                 <span>{label}</span>
-                <Stepper value={form[key]} onChange={value => set(key, value)} min={min} max={max} label={label.toLowerCase()} />
+                <Stepper
+                  value={form[key]}
+                  onChange={value => set(key, value)}
+                  min={min}
+                  max={max}
+                  label={label.toLowerCase()}
+                />
               </div>
             ))}
           </div>
@@ -462,7 +727,10 @@ export function HostListingForm({ id }: { id?: string }) {
 
         <section className="panel">
           <h2 className="block-title">
-            <span>4</span> Fotos <em className="muted small">({form.photos.length}/12 · a primeira é a capa)</em>
+            <span>4</span> Fotos{" "}
+            <em className="muted small">
+              ({form.photos.length}/12 · a primeira é a capa)
+            </em>
           </h2>
           <div className="photo-grid">
             {form.photos.map((photo, index) => (
@@ -470,13 +738,32 @@ export function HostListingForm({ id }: { id?: string }) {
                 <img src={photo} alt={`Foto ${index + 1}`} />
                 {index === 0 && <span className="cover-tag">Capa</span>}
                 <div className="photo-tools">
-                  <button type="button" onClick={() => movePhoto(index, -1)} disabled={index === 0} aria-label="Mover para a esquerda">
+                  <button
+                    type="button"
+                    onClick={() => movePhoto(index, -1)}
+                    disabled={index === 0}
+                    aria-label="Mover para a esquerda"
+                  >
                     <Icon name="chevron-left" size={16} />
                   </button>
-                  <button type="button" onClick={() => movePhoto(index, 1)} disabled={index === form.photos.length - 1} aria-label="Mover para a direita">
+                  <button
+                    type="button"
+                    onClick={() => movePhoto(index, 1)}
+                    disabled={index === form.photos.length - 1}
+                    aria-label="Mover para a direita"
+                  >
                     <Icon name="chevron-right" size={16} />
                   </button>
-                  <button type="button" onClick={() => set("photos", form.photos.filter((_, item) => item !== index))} aria-label="Remover foto">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set(
+                        "photos",
+                        form.photos.filter((_, item) => item !== index)
+                      )
+                    }
+                    aria-label="Remover foto"
+                  >
                     <Icon name="trash" size={16} />
                   </button>
                 </div>
@@ -492,12 +779,26 @@ export function HostListingForm({ id }: { id?: string }) {
                 <Icon name="upload" size={26} />
                 <strong>Enviar fotos</strong>
                 <small>Do computador ou celular</small>
-                <input type="file" accept="image/*" multiple hidden onChange={event => { addFiles(event.target.files); event.target.value = ""; }} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={event => {
+                    addFiles(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
               </label>
             )}
           </div>
           <div className="inline-form">
-            <input value={linkUrl} onChange={event => setLinkUrl(event.target.value)} placeholder="Ou cole o link de uma imagem (https://…)" aria-label="Link de imagem" />
+            <input
+              value={linkUrl}
+              onChange={event => setLinkUrl(event.target.value)}
+              placeholder="Ou cole o link de uma imagem (https://…)"
+              aria-label="Link de imagem"
+            />
             <button type="button" className="btn btn-outline" onClick={addLink}>
               Adicionar link
             </button>
@@ -510,8 +811,18 @@ export function HostListingForm({ id }: { id?: string }) {
           </h2>
           <label className="field">
             <span className="field-label">Sobre o espaço</span>
-            <textarea rows={6} value={form.description} onChange={event => set("description", event.target.value)} required minLength={30} maxLength={3000} placeholder="O que torna este espaço especial? Fale da vista, da vizinhança, do que fica perto e do que o hóspede vai encontrar." />
-            <small className="field-hint">{form.description.length}/3000 · mínimo de 30 caracteres</small>
+            <textarea
+              rows={6}
+              value={form.description}
+              onChange={event => set("description", event.target.value)}
+              required
+              minLength={30}
+              maxLength={3000}
+              placeholder="O que torna este espaço especial? Fale da vista, da vizinhança, do que fica perto e do que o hóspede vai encontrar."
+            />
+            <small className="field-hint">
+              {form.description.length}/3000 · mínimo de 30 caracteres
+            </small>
           </label>
         </section>
 
@@ -523,8 +834,22 @@ export function HostListingForm({ id }: { id?: string }) {
             {AMENITIES.map(amenity => {
               const checked = form.amenities.includes(amenity);
               return (
-                <label key={amenity} className={`amenity-option${checked ? " checked" : ""}`}>
-                  <input type="checkbox" checked={checked} onChange={() => set("amenities", checked ? form.amenities.filter(item => item !== amenity) : [...form.amenities, amenity])} />
+                <label
+                  key={amenity}
+                  className={`amenity-option${checked ? " checked" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() =>
+                      set(
+                        "amenities",
+                        checked
+                          ? form.amenities.filter(item => item !== amenity)
+                          : [...form.amenities, amenity]
+                      )
+                    }
+                  />
                   <Icon name={AMENITY_ICONS[amenity] || "check"} size={18} />
                   <span>{amenity}</span>
                 </label>
@@ -540,22 +865,49 @@ export function HostListingForm({ id }: { id?: string }) {
           <div className="form-grid three">
             <label className="field">
               <span className="field-label">Diária (R$)</span>
-              <input type="number" min={30} max={20000} step="1" inputMode="numeric" value={form.price} onChange={event => set("price", event.target.value)} required placeholder="280" />
+              <input
+                type="number"
+                min={30}
+                max={20000}
+                step="1"
+                inputMode="numeric"
+                value={form.price}
+                onChange={event => set("price", event.target.value)}
+                required
+                placeholder="280"
+              />
             </label>
             <label className="field">
               <span className="field-label">Taxa de limpeza (R$)</span>
-              <input type="number" min={0} max={3000} step="1" inputMode="numeric" value={form.cleaningFee} onChange={event => set("cleaningFee", event.target.value)} />
+              <input
+                type="number"
+                min={0}
+                max={3000}
+                step="1"
+                inputMode="numeric"
+                value={form.cleaningFee}
+                onChange={event => set("cleaningFee", event.target.value)}
+              />
             </label>
             <div className="field">
               <span className="field-label">Mínimo de noites</span>
-              <Stepper value={form.minNights} onChange={value => set("minNights", value)} min={1} max={30} label="noites mínimas" />
+              <Stepper
+                value={form.minNights}
+                onChange={value => set("minNights", value)}
+                min={1}
+                max={30}
+                label="noites mínimas"
+              />
             </div>
           </div>
           {price >= 30 && (
             <p className="points-preview">
               <Icon name="sparkles" size={16} />
               <span>
-                Hóspedes ganham <strong>{pointsForPrice(price)} Pontos Cívicos</strong> por estadia neste espaço. Sem comissão: você recebe o valor combinado diretamente.
+                Hóspedes ganham{" "}
+                <strong>{pointsForPrice(price)} Pontos Cívicos</strong> por
+                estadia neste espaço. Sem comissão: você recebe o valor
+                combinado diretamente.
               </span>
             </p>
           )}
@@ -568,18 +920,36 @@ export function HostListingForm({ id }: { id?: string }) {
           <div className="form-grid">
             <label className="field">
               <span className="field-label">Check-in a partir de</span>
-              <input type="time" value={form.checkInTime} onChange={event => set("checkInTime", event.target.value)} required />
+              <input
+                type="time"
+                value={form.checkInTime}
+                onChange={event => set("checkInTime", event.target.value)}
+                required
+              />
             </label>
             <label className="field">
               <span className="field-label">Check-out até</span>
-              <input type="time" value={form.checkOutTime} onChange={event => set("checkOutTime", event.target.value)} required />
+              <input
+                type="time"
+                value={form.checkOutTime}
+                onChange={event => set("checkOutTime", event.target.value)}
+                required
+              />
             </label>
           </div>
           <label className="field">
             <span className="field-label">
               Regras da casa <em>uma por linha</em>
             </span>
-            <textarea rows={4} value={form.houseRules} onChange={event => set("houseRules", event.target.value)} maxLength={1500} placeholder={"Não é permitido fumar\nSilêncio após as 22h\nPets sob consulta"} />
+            <textarea
+              rows={4}
+              value={form.houseRules}
+              onChange={event => set("houseRules", event.target.value)}
+              maxLength={1500}
+              placeholder={
+                "Não é permitido fumar\nSilêncio após as 22h\nPets sob consulta"
+              }
+            />
           </label>
         </section>
 
@@ -587,8 +957,17 @@ export function HostListingForm({ id }: { id?: string }) {
           <Link to="/anfitriao" className="btn btn-ghost">
             Cancelar
           </Link>
-          <button className="btn btn-primary btn-lg" disabled={saving || uploading > 0}>
-            {saving ? "Enviando…" : uploading ? "Aguardando fotos…" : id ? "Salvar e enviar para revisão" : "Enviar anúncio para revisão"}
+          <button
+            className="btn btn-primary btn-lg"
+            disabled={saving || uploading > 0}
+          >
+            {saving
+              ? "Enviando…"
+              : uploading
+                ? "Aguardando fotos…"
+                : id
+                  ? "Salvar e enviar para revisão"
+                  : "Enviar anúncio para revisão"}
           </button>
         </div>
       </form>

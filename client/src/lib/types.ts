@@ -3,6 +3,7 @@ export type User = {
   name: string;
   email: string;
   role: "user" | "admin";
+  isHost: boolean;
   phone: string;
   bio: string;
   avatarUrl: string;
@@ -52,12 +53,20 @@ export type Listing = {
   reviewCount: number;
 };
 
-export type HostListing = Listing & { pendingRequests: number; upcomingStays: number };
+export type HostListing = Listing & {
+  pendingRequests: number;
+  upcomingStays: number;
+};
 export type AdminListing = Listing & { owner: Person; openReports: number };
 
 export type ListingDetail = {
   listing: Listing & {
-    host: Person & { bio: string; listingsCount: number; rating: number | null; reviewCount: number };
+    host: Person & {
+      bio: string;
+      listingsCount: number;
+      rating: number | null;
+      reviewCount: number;
+    };
   };
   bookedRanges: { checkIn: string; checkOut: string }[];
   breakdown: { stars: number; count: number }[];
@@ -83,8 +92,16 @@ export type Review = {
   user: Person;
 };
 
-export type ReservationStatus = "pending" | "confirmed" | "declined" | "cancelled";
-export type ReservationStage = ReservationStatus | "upcoming" | "ongoing" | "completed";
+export type ReservationStatus =
+  | "pending"
+  | "confirmed"
+  | "declined"
+  | "cancelled";
+export type ReservationStage =
+  | ReservationStatus
+  | "upcoming"
+  | "ongoing"
+  | "completed";
 
 export type Reservation = {
   id: number;
@@ -104,7 +121,14 @@ export type Reservation = {
   createdAt: string;
   updatedAt: string;
   coupon: { code: string; amount: number } | null;
-  listing: { id: number; title: string; district: string; image: string; checkInTime: string; checkOutTime: string } | null;
+  listing: {
+    id: number;
+    title: string;
+    district: string;
+    image: string;
+    checkInTime: string;
+    checkOutTime: string;
+  } | null;
   guest: Person;
   host: Person;
   role: "host" | "guest" | "admin";
@@ -117,7 +141,13 @@ export type Reservation = {
   canReview: boolean;
 };
 
-export type Message = { id: number; body: string; createdAt: string; mine: boolean; sender: Person };
+export type Message = {
+  id: number;
+  body: string;
+  createdAt: string;
+  mine: boolean;
+  sender: Person;
+};
 
 export type Coupon = {
   id: number;
@@ -138,15 +168,33 @@ export type PointsSummary = {
   pending: number;
   history: { id: string; label: string; points: number; date: string }[];
   coupons: Coupon[];
-  rewards: { id: number; points: number; amount: number; title: string; detail: string }[];
+  rewards: {
+    id: number;
+    points: number;
+    amount: number;
+    title: string;
+    detail: string;
+  }[];
 };
 
 export type AdminUser = User & { listingsCount: number; tripsCount: number };
 
 export type AdminOverview = {
   users: { total: number; blocked: number; hosts: number };
-  listings: { total: number; pending: number; approved: number; rejected: number; paused: number };
-  reservations: { total: number; pending: number; confirmed: number; cancelled: number; declined: number };
+  listings: {
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+    paused: number;
+  };
+  reservations: {
+    total: number;
+    pending: number;
+    confirmed: number;
+    cancelled: number;
+    declined: number;
+  };
   reviews: { total: number; hidden: number; average: number | null };
   reports: { open: number };
   database: string;
@@ -162,5 +210,16 @@ export type Report = {
   user: Person;
 };
 
-export type RealtimeMessage = { reservationId: number; title: string; message: { id: number; body: string; createdAt: string; sender: Person } };
-export type RealtimeReservation = { id: number; status: string; kind: string; from: string; byId?: string; title: string };
+export type RealtimeMessage = {
+  reservationId: number;
+  title: string;
+  message: { id: number; body: string; createdAt: string; sender: Person };
+};
+export type RealtimeReservation = {
+  id: number;
+  status: string;
+  kind: string;
+  from: string;
+  byId?: string;
+  title: string;
+};
